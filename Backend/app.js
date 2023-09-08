@@ -7,13 +7,15 @@ const express = require("express");
 const app = express();
 
 
-// Middleware anciennement appeler bodyparser, Intercepte les requêtes ayant un entête Content-Type application/json
-// Permet de nous donner accès au corps d'une requete dans le callback requete.body ou req.body
-app.use(express.json());
 
 // Un middleware est un bloc de code qui traite les requêtes et réponses de votre application
 // Chaque élément de middleware peut les lire, les analyser et les manipuler
 // Le middleware Express reçoit également la méthode next , qui permet à chaque middleware de passer l'exécution au middleware suivant.
+
+// Middleware anciennement appeler bodyparser, Intercepte les requêtes ayant un entête Content-Type application/json
+// Permet de nous donner accès au corps d'une requete dans le callback requete.body ou req.body
+app.use(express.json());
+
 
 
 // Le CORS définit comment les serveurs et les navigateurs interagissent, en spécifiant quelles ressources peuvent être demandées de manière légitime
@@ -64,6 +66,8 @@ app.get('/api/stuff', (req, res, next) => {
     ];
     res.status(200).json(stuff);
   });
+
+//   Le dernier middleware d'une chaîne doit renvoyer la réponse au client pour empêcher la requête d'expirer.
 
 module.exports = app;
 
