@@ -1,4 +1,5 @@
-const express = require("express");
+const express   = require("express");
+const mongoose  = require('mongoose');
 
 
 
@@ -6,6 +7,13 @@ const express = require("express");
 // Une application Express est une série de fonctions appelées middleware
 const app = express();
 
+
+// Connection à BDD
+mongoose.connect('mongodb+srv://Alex4testeur1:dojofullstackjs4testeur1@cluster0.vlghqkm.mongodb.net/?retryWrites=true&w=majority',
+  { useNewUrlParser: true,
+    useUnifiedTopology: true })
+  .then(() => console.log('Connexion à MongoDB réussie !'))
+  .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 
 // Un middleware est un bloc de code qui traite les requêtes et réponses de votre application
