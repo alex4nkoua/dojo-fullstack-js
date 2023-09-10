@@ -1,6 +1,9 @@
 const express   = require("express");
 const mongoose  = require('mongoose');
 
+const Thing     = require('./models/things');
+
+
 
 
 // création de l'application express
@@ -16,11 +19,11 @@ mongoose.connect('mongodb+srv://Alex4testeur1:dojofullstackjs4testeur1@cluster0.
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
 
-// Un middleware est un bloc de code qui traite les requêtes et réponses de votre application
-// Chaque élément de middleware peut les lire, les analyser et les manipuler
+// Un middleware est un bloc de code qui traite les requêtes et réponses de notre application
+// Chaque élément de middleware peut lire, analyser et les manipuler les requetes
 // Le middleware Express reçoit également la méthode next , qui permet à chaque middleware de passer l'exécution au middleware suivant.
 
-// Middleware anciennement appeler bodyparser, Intercepte les requêtes ayant un entête Content-Type application/json
+// Middleware anciennement appeler bodyparser, Intercepte les requêtes, ici ayant un entête Content-Type application/json
 // Permet de nous donner accès au corps d'une requete dans le callback requete.body ou req.body
 app.use(express.json());
 
@@ -38,44 +41,38 @@ app.use((req, res, next) => {
 
 
 
-// placer la route POST au-dessus du middleware pour les requêtes GET,
-// car la logique GET interceptera actuellement toutes les requêtes envoyées à votre endpoint /api/stuff
+// Placer la route POST au-dessus du middleware pour les requêtes GET,
+// car la logique GET interceptera toutes les requêtes envoyées à notre endpoint /api/stuff
 // Toujours envoyer une reponse à une requête pour qu'elle soit valide
-// cet route interceptera uniquement les requetes POST avec cette endpoint
+// cet route interceptera uniquement les requetes POST avec endpoint /api/stuff
 app.post('/api/stuff', (req, res, next) => {
-    console.log(req.body);
-    res.status(201).json({
-        message : 'Objet crée !'
-    })
-    next();
+  delete req.body._id;                            // je supprime le faux id generer par le front-end
+  const thing = new Thing({                       // je crée une instance du model Thing
+    ...req.body                                   // Je recupere le corps de la requete et crée des varibales à volé coorespond à chaque champ du schéma de donné
+  });
+  thing.save()                                    // le modèle Thing à une méthode save()  – enregistre un Thing dans la BDD
+    .then(() => res.status(201).json({message: "Objet enregistrer !" }))    // Si tout s'est bien passé On renvoie une réponse pour  que la requete reçu soit valide et qu'elle n'expire pas
+    .catch(() => res.status(400).json({ error }));                            // Si il ya eu un problème nous renvoyant un code erreur
 })
 
 
-// la route ou endpoint renvoie un tableau d'objet en json  avec le code 200
-// Nous créons un groupe d'articles avec le schéma de données spécifique requis par le front-end
+app.get('/api/stuff/:id', (req, res, next) => {       // : en face du segment dynamique de la route pour la rendre accessible en tant que paramètre ;
+  Thing.findOne({_id: req.params.id})                 // la méthode findOne() retourne un seul Thing basé sur la fonction de comparaison qu'on lui passe (souvent pour récupérer un Thing par son identifiant unique).
+    .then(thing => res.status(200).json(thing))       // ce Thing est ensuite retourné dans une Promise et envoyé au front-end ;
+    .catch(error => res.status(404).json({error}));   // Si aucun Thing n'est trouvé ou si une erreur se produit, nous envoyons une erreur 404 au front-end,
+});
+
+
+
+// la route ou endpoint renvoie un tableau d'objet en json avec le code 200
+// Thing nous permet d'enregister des données dans la BDD mais aussi de Lire données de la BDD
 app.get('/api/stuff', (req, res, next) => {
-    const stuff = [
-      {
-        _id: 'oeihfzeoi',
-        title: 'Mon premier objet',
-        description: 'Les infos de mon premier objet',
-        imageUrl: 'https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg',
-        price: 4900,
-        userId: 'qsomihvqios',
-      },
-      {
-        _id: 'oeihfzeomoihi',
-        title: 'Mon deuxième objet',
-        description: 'Les infos de mon deuxième objet',
-        imageUrl: 'https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg',
-        price: 2900,
-        userId: 'qsomihvqios',
-      },
-    ];
-    res.status(200).json(stuff);
+    Thing.find()                                      // La méthode find() retourne tous les Things de la BDD
+    .then(things => res.status(200).json(things))
+    .catch(error => res.status(400).json({ error }));
   });
 
-//   Le dernier middleware d'une chaîne doit renvoyer la réponse au client pour empêcher la requête d'expirer.
+// Le dernier middleware d'une chaîne doit renvoyer la réponse au client pour empêcher la requête d'expirer.
 
 module.exports = app;
 
